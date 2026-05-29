@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+
+{% block title %}Fraud Patterns Analysis{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="fas fa-chart-pie me-2"></i>Fraud Patterns Analysis</h2>
+
+<div class="row">
+    <!-- Pattern 1: Amount Ranges -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-transparent">
+                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Pattern 1: Fraud by Amount Range</h5>
+            </div>
+            <div class="card-body">
+                {% if patterns.amount_ranges %}
+                <canvas id="amountRangeChart" style="height: 300px;"></canvas>
+                {% else %}
+                <div class="alert alert-warning">No amount range data available</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Pattern 2: Fraud by Hour -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-transparent">
+                <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Pattern 2: Fraud by Time of Day</h5>
+            </div>
+            <div class="card-body">
+                {% if patterns.fraud_by_hour %}
+                <canvas id="hourChart" style="height: 300px;"></canvas>
+                {% else %}
+                <div class="alert alert-warning">No hourly data available</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Pattern 3: Top Fraud States -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-transparent">
+                <h5 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>Pattern 3: Top Fraud States</h5>
+            </div>
+            <div class="card-body">
+                {% if patterns.fraud_by_state %}
+                <canvas id="stateChart" style="height: 300px;"></canvas>
+                {% else %}
+                <div class="alert alert-warning">No state data available</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Pattern 4: Fraud by Merchant -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-transparent">
+                <h5 class="mb-0"><i class="fas fa-store me-2"></i>Pattern 4: Fraud by Merchant Category</h5>
+            </div>
+            <div class="card-body">
+                {% if patterns.fraud_by_merchant %}
+                <canvas id="merchantChart" style="height: 300px;"></canvas>
+                {% else %}
+                <div class="alert alert-warning">No merchant data available</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Pattern 5: Fraud by Channel -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-transparent">
+                <h5 class="mb-0"><i class="fas fa-mobile-alt me-2"></i>Pattern 5: Fraud by Channel</h5>
+            </div>
+            <div class="card-body">
+                {% if patterns.fraud_by_channel %}
+                <canvas id="channelChart" style="height: 300px;"></canvas>
+                {% else %}
+                <div class="alert alert-warning">No channel data available</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Pattern 6: Repeat Offenders -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-transparent">
+                <h5 class="mb-0"><i class="fas fa-repeat me-2"></i>Pattern 6: Repeat Offenders</h5>
+            </div>
+            <div class="card-body">
+                {% if patterns.repeat_offenders %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Customer ID</th>
+                                <th>Fraud Count</th>
+                                <th>Risk Level</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for customer_id, count in patterns.repeat_offenders.items() %}
+                            <tr>
+                                <td><code>{{ customer_id }}</code></td>
+                                <td><span class="badge bg-danger">{{ count }}</span></td>
+                                <td>
+                                    {% if count >= 5 %}
+                                        <span class="badge bg-danger">Critical</span>
+                                    {% elif count >= 3 %}
+                                        <span class="badge bg-warning">High</span>
+                                    {% else %}
+                                        <span class="badge bg-info">Medium</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-warning">No repeat offenders found</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Pattern 1: Amount Ranges Chart
+    {% if patterns.amount_ranges %}
+    const amountCtx = document.getElementById('amountRangeChart').getContext('2d');
+    new Chart(amountCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ patterns.amount_ranges.keys()|list|tojson }},
+            datasets: [{
+                label: 'Number of Fraudulent Transactions',
+                data: {{ patterns.amount_ranges.values()|list|tojson }},
+                backgroundColor: 'rgba(231, 76, 60, 0.7)',
+                borderColor: 'rgba(231, 76, 60, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { labels: { color: '#e0e0e0' } },
+                title: { display: true, text: 'Fraud Distribution by Amount', color: '#e0e0e0' }
+            },
+            scales: {
+                y: { ticks: { color: '#e0e0e0' }, title: { display: true, text: 'Number of Frauds', color: '#e0e0e0' } },
+                x: { ticks: { color: '#e0e0e0', rotation: 45 }, title: { display: true, text: 'Amount Range', color: '#e0e0e0' } }
+            }
+        }
+    });
+    {% endif %}
+
+    // Pattern 2: Fraud by Hour Chart
+    {% if patterns.fraud_by_hour %}
+    const hourCtx = document.getElementById('hourChart').getContext('2d');
+    new Chart(hourCtx, {
+        type: 'line',
+        data: {
+            labels: {{ patterns.fraud_by_hour.keys()|list|tojson }},
+            datasets: [{
+                label: 'Fraud Incidents',
+                data: {{ patterns.fraud_by_hour.values()|list|tojson }},
+                borderColor: '#e74c3c',
+                backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { labels: { color: '#e0e0e0' } },
+                title: { display: true, text: 'Fraud Distribution by Hour', color: '#e0e0e0' }
+            },
+            scales: {
+                y: { ticks: { color: '#e0e0e0' }, title: { display: true, text: 'Number of Frauds', color: '#e0e0e0' } },
+                x: { ticks: { color: '#e0e0e0' }, title: { display: true, text: 'Hour of Day (24h)', color: '#e0e0e0' } }
+            }
+        }
+    });
+    {% endif %}
+
+    // Pattern 3: Top Fraud States Chart
+    {% if patterns.fraud_by_state %}
+    const stateCtx = document.getElementById('stateChart').getContext('2d');
+    new Chart(stateCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ patterns.fraud_by_state.keys()|list|tojson }},
+            datasets: [{
+                label: 'Number of Frauds',
+                data: {{ patterns.fraud_by_state.values()|list|tojson }},
+                backgroundColor: 'rgba(52, 152, 219, 0.7)',
+                borderColor: 'rgba(52, 152, 219, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { labels: { color: '#e0e0e0' } },
+                title: { display: true, text: 'Top Fraud States', color: '#e0e0e0' }
+            },
+            scales: {
+                x: { ticks: { color: '#e0e0e0' }, title: { display: true, text: 'Number of Frauds', color: '#e0e0e0' } },
+                y: { ticks: { color: '#e0e0e0' }, title: { display: true, text: 'State', color: '#e0e0e0' } }
+            }
+        }
+    });
+    {% endif %}
+
+    // Pattern 4: Fraud by Merchant Chart
+    {% if patterns.fraud_by_merchant %}
+    const merchantCtx = document.getElementById('merchantChart').getContext('2d');
+    new Chart(merchantCtx, {
+        type: 'pie',
+        data: {
+            labels: {{ patterns.fraud_by_merchant.keys()|list|tojson }},
+            datasets: [{
+                data: {{ patterns.fraud_by_merchant.values()|list|tojson }},
+                backgroundColor: ['#e74c3c', '#f39c12', '#2ecc71', '#3498db', '#9b59b6', '#1abc9c', '#e67e22', '#c0392b']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { labels: { color: '#e0e0e0' } },
+                title: { display: true, text: 'Fraud by Merchant Category', color: '#e0e0e0' }
+            }
+        }
+    });
+    {% endif %}
+
+    // Pattern 5: Fraud by Channel Chart
+    {% if patterns.fraud_by_channel %}
+    const channelCtx = document.getElementById('channelChart').getContext('2d');
+    new Chart(channelCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ patterns.fraud_by_channel.keys()|list|tojson }},
+            datasets: [{
+                label: 'Number of Frauds',
+                data: {{ patterns.fraud_by_channel.values()|list|tojson }},
+                backgroundColor: 'rgba(155, 89, 182, 0.7)',
+                borderColor: 'rgba(155, 89, 182, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { labels: { color: '#e0e0e0' } },
+                title: { display: true, text: 'Fraud by Channel', color: '#e0e0e0' }
+            },
+            scales: {
+                y: { ticks: { color: '#e0e0e0' }, title: { display: true, text: 'Number of Frauds', color: '#e0e0e0' } },
+                x: { ticks: { color: '#e0e0e0', rotation: 45 }, title: { display: true, text: 'Channel', color: '#e0e0e0' } }
+            }
+        }
+    });
+    {% endif %}
+});
+</script>
+{% endblock %}

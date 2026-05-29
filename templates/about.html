@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}About Us{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 text-center mb-5">
+        <h2 class="mb-3"><i class="fas fa-shield-alt me-2"></i>About FraudShield</h2>
+        <p class="lead">Protecting financial transactions through advanced fraud detection</p>
+    </div>
+</div>
+
+<div class="row mb-5">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-rocket me-2" style="color: #667eea;"></i>
+                    Our Mission
+                </h5>
+                <p>To provide cutting-edge fraud detection solutions that protect individuals and businesses from financial fraud through advanced analytics and real-time monitoring systems.</p>
+                
+                <h5 class="card-title mt-4">
+                    <i class="fas fa-chart-line me-2" style="color: #667eea;"></i>
+                    Our Technology
+                </h5>
+                <p>Using rule-based detection algorithms that analyze transaction patterns, timing, amounts, and user behavior to identify potential fraud without relying on machine learning.</p>
+                
+                <h5 class="card-title mt-4">
+                    <i class="fas fa-globe me-2" style="color: #667eea;"></i>
+                    Our Impact
+                </h5>
+                <p>Analyzing thousands of transactions daily across banking and UPI channels, helping prevent financial losses and raising awareness about digital fraud.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-users me-2" style="color: #667eea;"></i>
+                    Our Team
+                </h5>
+                {% for member in team_members %}
+                <div class="d-flex align-items-center mb-3 p-2" style="background: rgba(102, 126, 234, 0.1); border-radius: 10px;">
+                    <div style="font-size: 2rem; width: 60px;">{{ member.icon }}</div>
+                    <div>
+                        <h6 class="mb-0">{{ member.name }}</h6>
+                        <small class="text-muted">{{ member.role }}</small>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-envelope me-2" style="color: #667eea;"></i>
+                    Contact Us
+                </h5>
+                <p class="mb-2">📧 support@fraudshield.com</p>
+                <p class="mb-2">📞 +91 1234567890</p>
+                <p>🏢 Mumbai, India</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Time Comparison{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="fas fa-chart-line me-2"></i>Time Period Comparison</h2>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                {% if comparison %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Time Period</th>
+                                <th>Transactions</th>
+                                <th>Frauds Detected</th>
+                                <th>Fraud Rate</th>
+                                <th>Avg Amount</th>
+                                <th>Total Volume</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for period, data in comparison.items() %}
+                            <tr>
+                                <td><strong>{{ period }}</strong></td>
+                                <td>{{ "{:,}".format(data.transactions) }}</td>
+                                <td>
+                                    <span class="badge bg-danger">{{ data.frauds }}</span>
+                                </td>
+                                <td>
+                                    <div class="progress" style="height: 20px; width: 100px;">
+                                        <div class="progress-bar bg-warning" style="width: {{ data.fraud_rate }}%">
+                                            {{ data.fraud_rate }}%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>₹{{ "{:,.2f}".format(data.avg_amount) }}</td>
+                                <td>₹{{ "{:,.2f}".format(data.total_volume) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="mt-4">
+                    <canvas id="comparisonChart" style="max-height: 400px;"></canvas>
+                </div>
+                
+                <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+                <script>
+                    const ctx = document.getElementById('comparisonChart').getContext('2d');
+                    const periods = {{ comparison.keys()|list|tojson }};
+                    const fraudRates = {{ comparison.values()|map(attribute='fraud_rate')|list|tojson }};
+                    
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: periods,
+                            datasets: [{
+                                label: 'Fraud Rate (%)',
+                                data: fraudRates,
+                                borderColor: '#e74c3c',
+                                backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                                borderWidth: 3,
+                                fill: true,
+                                tension: 0.4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            plugins: {
+                                legend: { labels: { color: '#e0e0e0' } },
+                                title: {
+                                    display: true,
+                                    text: 'Fraud Rate Trend Over Time',
+                                    color: '#e0e0e0',
+                                    font: { size: 16 }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    ticks: { color: '#e0e0e0' },
+                                    title: { display: true, text: 'Fraud Rate (%)', color: '#e0e0e0' }
+                                },
+                                x: {
+                                    ticks: { color: '#e0e0e0' },
+                                    title: { display: true, text: 'Time Period', color: '#e0e0e0' }
+                                }
+                            }
+                        }
+                    });
+                </script>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-chart-line fa-3x mb-3" style="color: #667eea;"></i>
+                    <p>No transaction data available for comparison</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

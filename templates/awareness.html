@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Fraud Awareness{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="fas fa-lightbulb me-2"></i>Fraud Awareness & Prevention</h2>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.total_frauds_detected }}</div>
+            <p>Frauds Detected</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.amount_saved }}</div>
+            <p>Amount Saved</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.active_alerts }}</div>
+            <p>Active Alerts</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.success_rate }}</div>
+            <p>Success Rate</p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    {% for fraud in common_frauds %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <span style="font-size: 3rem;">{{ fraud.icon }}</span>
+                </div>
+                <h5 class="card-title text-center">{{ fraud.name }}</h5>
+                <p class="card-text text-muted">{{ fraud.description }}</p>
+                <hr>
+                <h6><i class="fas fa-shield-alt me-2" style="color: #2ecc71;"></i>Prevention Tips:</h6>
+                <p class="small">{{ fraud.prevention }}</p>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card bg-danger bg-opacity-10">
+            <div class="card-body">
+                <h5 class="card-title text-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Emergency Contact
+                </h5>
+                <p class="mb-0">If you suspect fraud, immediately contact your bank and report to cyber crime at <strong>1930</strong> or visit <strong>cybercrime.gov.in</strong></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

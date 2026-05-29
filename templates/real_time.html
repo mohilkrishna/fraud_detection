@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Real-Time Monitoring{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="fas fa-bell me-2"></i>Real-Time Transaction Monitoring</h2>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-number">{{ "%.2f"|format(metrics.transactions_per_minute) }}</div>
+            <p>Txns/Minute</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-number text-warning">{{ metrics.high_risk_transactions }}</div>
+            <p>High Risk Txns</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-number">₹{{ "%.2f"|format(metrics.total_volume / 100000) }}L</div>
+            <p>Volume (Lakhs)</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-number">{{ metrics.peak_hour }}:00</div>
+            <p>Peak Hour</p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 mb-4">
+        <div class="card">
+            <div class="card-header bg-transparent">
+                <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2" style="color: #e74c3c;"></i>Live Fraud Alerts</h5>
+            </div>
+            <div class="card-body">
+                {% if alerts %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Transaction ID</th>
+                                <th>Customer</th>
+                                <th>Amount</th>
+                                <th>Risk Score</th>
+                                <th>Reasons</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for alert in alerts %}
+                            <tr class="{% if alert.risk_score > 80 %}table-danger{% elif alert.risk_score > 60 %}table-warning{% endif %}">
+                                <td>{{ alert.time }}</td>
+                                <td><code>{{ alert.transaction_id }}</code></td>
+                                <td>{{ alert.customer }}</td>
+                                <td>₹{{ "%.2f"|format(alert.amount) }}</td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar {% if alert.risk_score > 80 %}bg-danger{% elif alert.risk_score > 60 %}bg-warning{% else %}bg-info{% endif %}" 
+                                             role="progressbar" style="width: {{ alert.risk_score }}%">
+                                            {{ alert.risk_score }}%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><small>{{ alert.reasons }}</small></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-check-circle fa-3x mb-3" style="color: #2ecc71;"></i>
+                    <p>No active alerts at this moment</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header bg-transparent">
+                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Suspicious Merchants</h5>
+            </div>
+            <div class="card-body">
+                {% if metrics.suspicious_merchants %}
+                <div class="list-group">
+                    {% for merchant, count in metrics.suspicious_merchants.items() %}
+                    <div class="list-group-item bg-transparent text-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>{{ merchant }}</span>
+                            <span class="badge bg-warning">{{ count }} txns</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-center text-muted">No suspicious merchants detected</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-body text-center">
+                <i class="fas fa-sync-alt fa-2x mb-2" style="color: #667eea;"></i>
+                <p class="mb-0 small">Auto-refreshing every 30 seconds</p>
+                <button class="btn btn-sm btn-outline-primary mt-2" onclick="location.reload()">
+                    <i class="fas fa-refresh me-1"></i>Refresh Now
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Auto-refresh every 30 seconds
+    setTimeout(function() {
+        location.reload();
+    }, 30000);
+</script>
+{% endblock %}

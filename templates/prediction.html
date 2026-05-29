@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Fraud Detection{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="fas fa-robot me-2"></i>Fraud Detection System</h2>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header bg-transparent">
+                <h5 class="mb-0"><i class="fas fa-sliders-h me-2"></i>Select Detection Method</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Fraud Detection Type</label>
+                        <select name="fraud_type" class="form-select" required id="fraudTypeSelect">
+                            <option value="">Choose detection method...</option>
+                            <option value="high_amount">High Amount Transaction Fraud</option>
+                            <option value="unusual_timing">Unusual Timing Fraud (Late Night)</option>
+                            <option value="low_balance">Low Balance - High Withdrawal Fraud</option>
+                            <option value="frequent_transactions">Frequent Transactions Fraud</option>
+                        </select>
+                    </div>
+                    
+                    <div id="amountDiv" style="display:none;" class="mb-3">
+                        <label class="form-label">Amount Threshold (₹)</label>
+                        <input type="number" name="amount_threshold" class="form-control" value="50000">
+                    </div>
+                    
+                    <div id="frequencyDiv" style="display:none;" class="mb-3">
+                        <label class="form-label">Frequency Threshold (transactions/day)</label>
+                        <input type="number" name="frequency_threshold" class="form-control" value="10">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search me-2"></i>Detect Frauds
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8 mb-4">
+        <div class="card">
+            <div class="card-header bg-transparent">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>Detection Results
+                    {% if selected_type %}
+                    <span class="badge bg-info ms-2">{{ selected_type.replace('_', ' ').title() }}</span>
+                    {% endif %}
+                    {% if result_count > 0 %}
+                    <span class="badge bg-warning ms-2">{{ result_count }} results found</span>
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if fraud_results and fraud_results|length > 0 %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                {% for key in fraud_results[0].keys() %}
+                                    <th>{{ key.replace('_', ' ').title() }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for result in fraud_results %}
+                            <tr>
+                                {% for key, value in result.items() %}
+                                <td>
+                                    {% if key == 'risk_score' and value is number %}
+                                        {% if value > 80 %}
+                                            <span class="badge bg-danger">{{ value|round(0) }}%</span>
+                                        {% elif value > 60 %}
+                                            <span class="badge bg-warning">{{ value|round(0) }}%</span>
+                                        {% else %}
+                                            <span class="badge bg-info">{{ value|round(0) }}%</span>
+                                        {% endif %}
+                                    {% elif key == 'transaction_amount' or key == 'amount' %}
+                                        ₹{{ "{:,.2f}".format(value) }}
+                                    {% else %}
+                                        {{ value }}
+                                    {% endif %}
+                                </td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-chart-line fa-3x mb-3" style="color: #667eea;"></i>
+                    <p>No results to display. Select a detection method above.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const fraudTypeSelect = document.getElementById('fraudTypeSelect');
+    const amountDiv = document.getElementById('amountDiv');
+    const frequencyDiv = document.getElementById('frequencyDiv');
+    
+    fraudTypeSelect.addEventListener('change', function() {
+        amountDiv.style.display = 'none';
+        frequencyDiv.style.display = 'none';
+        
+        if (this.value === 'high_amount') {
+            amountDiv.style.display = 'block';
+        } else if (this.value === 'frequent_transactions') {
+            frequencyDiv.style.display = 'block';
+        }
+    });
+</script>
+{% endblock %}

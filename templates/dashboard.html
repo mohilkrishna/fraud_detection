@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="fas fa-chart-line me-2"></i>Fraud Analytics Dashboard</h2>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-number">{{ summary.total_bank }}</div>
+            <p>Bank Transactions</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-number">{{ summary.total_upi }}</div>
+            <p>UPI Transactions</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-number text-danger">{{ summary.bank_frauds + summary.upi_frauds }}</div>
+            <p>Total Frauds</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-number">₹{{ "{:,.2f}".format(summary.avg_amount) }}</div>
+            <p>Avg Transaction</p>
+        </div>
+    </div>
+</div>
+
+<!-- Plot 1: Amount Distribution -->
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-header bg-transparent">
+                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Plot 1: Transaction Amount Distribution</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="amountChart" style="height: 400px; width: 100%;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Row 2: Transaction Type & Top States -->
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-transparent">
+                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Plot 2: Transaction Type Distribution</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="typeChart" style="height: 400px; width: 100%;"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-transparent">
+                <h5 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>Plot 3: Top States by Transactions</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="stateChart" style="height: 400px; width: 100%;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Row 3: Account Type & Channel -->
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-transparent">
+                <h5 class="mb-0"><i class="fas fa-university me-2"></i>Plot 4: Account Type Distribution</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="accountChart" style="height: 400px; width: 100%;"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-transparent">
+                <h5 class="mb-0"><i class="fas fa-mobile-alt me-2"></i>Plot 5: Transaction Channel</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="channelChart" style="height: 400px; width: 100%;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Plot 6: Merchant Category -->
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-header bg-transparent">
+                <h5 class="mb-0"><i class="fas fa-store me-2"></i>Plot 6: Top Merchant Categories</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="merchantChart" style="height: 400px; width: 100%;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Plot 1: Amount Distribution Bar Chart
+    {% if chart_data.amount_labels %}
+    const amountCtx = document.getElementById('amountChart').getContext('2d');
+    new Chart(amountCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ chart_data.amount_labels|tojson }},
+            datasets: [{
+                label: 'Number of Transactions',
+                data: {{ chart_data.amount_counts|tojson }},
+                backgroundColor: 'rgba(102, 126, 234, 0.7)',
+                borderColor: 'rgba(102, 126, 234, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { labels: { color: '#e0e0e0' } },
+                title: { display: true, text: 'Transaction Amount Distribution', color: '#e0e0e0' }
+            },
+            scales: {
+                y: { 
+                    ticks: { color: '#e0e0e0' },
+                    title: { display: true, text: 'Number of Transactions', color: '#e0e0e0' }
+                },
+                x: { 
+                    ticks: { color: '#e0e0e0', rotation: 45 },
+                    title: { display: true, text: 'Amount Range (₹)', color: '#e0e0e0' }
+                }
+            }
+        }
+    });
+    {% endif %}
+    
+    // Plot 2: Transaction Type Pie Chart
+    {% if chart_data.type_labels %}
+    const typeCtx = document.getElementById('typeChart').getContext('2d');
+    new Chart(typeCtx, {
+        type: 'pie',
+        data: {
+            labels: {{ chart_data.type_labels|tojson }},
+            datasets: [{
+                data: {{ chart_data.type_counts|tojson }},
+                backgroundColor: ['#667eea', '#764ba2', '#e74c3c', '#f39c12', '#2ecc71', '#3498db', '#1abc9c', '#9b59b6']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { labels: { color: '#e0e0e0' } },
+                title: { display: true, text: 'Transaction Type Distribution', color: '#e0e0e0' }
+            }
+        }
+    });
+    {% endif %}
+    
+    // Plot 3: Top States Horizontal Bar Chart
+    {% if chart_data.state_labels %}
+    const stateCtx = document.getElementById('stateChart').getContext('2d');
+    new Chart(stateCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ chart_data.state_labels|tojson }},
+            datasets: [{
+                label: 'Number of Transactions',
+                data: {{ chart_data.state_counts|tojson }},
+                backgroundColor: 'rgba(231, 76, 60, 0.7)',
+                borderColor: 'rgba(231, 76, 60, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { labels: { color: '#e0e0e0' } },
+                title: { display: true, text: 'Top 10 States', color: '#e0e0e0' }
+            },
+            scales: {
+                x: { ticks: { color: '#e0e0e0' }, title: { display: true, text: 'Number of Transactions', color: '#e0e0e0' } },
+                y: { ticks: { color: '#e0e0e0' }, title: { display: true, text: 'State', color: '#e0e0e0' } }
+            }
+        }
+    });
+    {% endif %}
+    
+    // Plot 4: Account Type Pie Chart
+    {% if chart_data.account_labels %}
+    const accountCtx = document.getElementById('accountChart').getContext('2d');
+    new Chart(accountCtx, {
+        type: 'pie',
+        data: {
+            labels: {{ chart_data.account_labels|tojson }},
+            datasets: [{
+                data: {{ chart_data.account_counts|tojson }},
+                backgroundColor: ['#3498db', '#e74c3c', '#2ecc71']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { labels: { color: '#e0e0e0' } },
+                title: { display: true, text: 'Account Type Distribution', color: '#e0e0e0' }
+            }
+        }
+    });
+    {% endif %}
+    
+    // Plot 5: Channel Bar Chart
+    {% if chart_data.channel_labels %}
+    const channelCtx = document.getElementById('channelChart').getContext('2d');
+    new Chart(channelCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ chart_data.channel_labels|tojson }},
+            datasets: [{
+                label: 'Number of Transactions',
+                data: {{ chart_data.channel_counts|tojson }},
+                backgroundColor: 'rgba(155, 89, 182, 0.7)',
+                borderColor: 'rgba(155, 89, 182, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { labels: { color: '#e0e0e0' } },
+                title: { display: true, text: 'Channel Distribution', color: '#e0e0e0' }
+            },
+            scales: {
+                y: { ticks: { color: '#e0e0e0' }, title: { display: true, text: 'Number of Transactions', color: '#e0e0e0' } },
+                x: { ticks: { color: '#e0e0e0', rotation: 45 }, title: { display: true, text: 'Channel', color: '#e0e0e0' } }
+            }
+        }
+    });
+    {% endif %}
+    
+    // Plot 6: Merchant Category Bar Chart
+    {% if chart_data.merchant_labels %}
+    const merchantCtx = document.getElementById('merchantChart').getContext('2d');
+    new Chart(merchantCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ chart_data.merchant_labels|tojson }},
+            datasets: [{
+                label: 'Number of Transactions',
+                data: {{ chart_data.merchant_counts|tojson }},
+                backgroundColor: 'rgba(26, 188, 156, 0.7)',
+                borderColor: 'rgba(26, 188, 156, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { labels: { color: '#e0e0e0' } },
+                title: { display: true, text: 'Top Merchant Categories', color: '#e0e0e0' }
+            },
+            scales: {
+                y: { ticks: { color: '#e0e0e0' }, title: { display: true, text: 'Number of Transactions', color: '#e0e0e0' } },
+                x: { ticks: { color: '#e0e0e0', rotation: 45 }, title: { display: true, text: 'Merchant Category', color: '#e0e0e0' } }
+            }
+        }
+    });
+    {% endif %}
+});
+</script>
+{% endblock %}
